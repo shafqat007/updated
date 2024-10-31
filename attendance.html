@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Attendance Data</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Basic Styling */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to right, #cfdef3, #e0eafc);
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Back Button */
+        .back-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #007bff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: background 0.3s;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Glass Structure */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            width: 80%;
+            max-width: 600px;
+            color: #333;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            color: #007bff;
+            margin-bottom: 30px;
+        }
+
+        /* Individual Record Style */
+        .record {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .record p {
+            margin: 5px 0;
+            font-size: 1em;
+        }
+
+        .record-id {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .record-details {
+            font-size: 0.95em;
+            color: #555;
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "rfid-296ab.firebaseapp.com",
+            databaseURL: "https://rfid-296ab-default-rtdb.firebaseio.com",
+            projectId: "rfid-296ab",
+            storageBucket: "rfid-296ab.appspot.com",
+            messagingSenderId: "1097708630883",
+            appId: "1:1097708630883:web:2dbf62e5ffcaafd1611956",
+            measurementId: "G-CD4VVCR59Q"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        function fetchRFIDStatuses() {
+            const tagsRef = ref(database, '/');
+            onValue(tagsRef, (snapshot) => {
+                const data = snapshot.val();
+                const displayDiv = document.getElementById('display');
+                displayDiv.innerHTML = ''; // Clear previous contents
+
+                for (const tag in data) {
+                    if (data[tag].status && data[tag].date && data[tag].time) {
+                        const recordDiv = document.createElement('div');
+                        recordDiv.classList.add('record');
+
+                        // ID
+                        const idParagraph = document.createElement('p');
+                        idParagraph.classList.add('record-id');
+                        idParagraph.textContent = `ID: ${tag}`;
+                        recordDiv.appendChild(idParagraph);
+
+                        // Details
+                        const statusParagraph = document.createElement('p');
+                        statusParagraph.classList.add('record-details');
+                        statusParagraph.textContent = `Status: ${data[tag].status}`;
+                        recordDiv.appendChild(statusParagraph);
+
+                        const dateParagraph = document.createElement('p');
+                        dateParagraph.classList.add('record-details');
+                        dateParagraph.textContent = `Date: ${data[tag].date}`;
+                        recordDiv.appendChild(dateParagraph);
+
+                        const timeParagraph = document.createElement('p');
+                        timeParagraph.classList.add('record-details');
+                        timeParagraph.textContent = `Time: ${data[tag].time}`;
+                        recordDiv.appendChild(timeParagraph);
+
+                        displayDiv.appendChild(recordDiv);
+                    }
+                }
+            }, {
+                onlyOnce: false
+            });
+        }
+
+        // Fetch attendance data on page load
+        window.onload = fetchRFIDStatuses;
+    </script>
+</head>
+<body>
+    <!-- Back Button -->
+    <button class="back-button" onclick="window.location.href='index.html'">Back to Login</button>
+
+    <div class="glass-container" id="display">
+        <h1>Attendance Data</h1>
+    </div>
+</body>
+</html>

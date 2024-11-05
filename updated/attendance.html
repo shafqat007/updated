@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Attendance Data</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Basic Styling */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to right, #cfdef3, #e0eafc);
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Back Button */
+        .back-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #007bff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: background 0.3s;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Glass Structure */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            width: 80%;
+            max-width: 600px;
+            color: #333;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            color: #007bff;
+            margin-bottom: 30px;
+        }
+
+        /* Individual Record Style */
+        .record {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: left;
+            position: relative;
+        }
+
+        .record p {
+            margin: 5px 0;
+            font-size: 1em;
+        }
+
+        .record-id {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .record-details {
+            font-size: 0.95em;
+            color: #555;
+        }
+
+        .history-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 10px;
+            font-size: 0.9em;
+            color: #007bff;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .history-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Modal for History */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 80%;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            color: #007bff;
+        }
+
+        .modal-content ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .modal-content li {
+            margin-bottom: 10px;
+            font-size: 0.95em;
+            color: #333;
+        }
+
+        .close-modal {
+            display: block;
+            margin-top: 15px;
+            color: #007bff;
+            cursor: pointer;
+            text-align: right;
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "rfid-296ab.firebaseapp.com",
+            databaseURL: "https://rfid-296ab-default-rtdb.firebaseio.com",
+            projectId: "rfid-296ab",
+            storageBucket: "rfid-296ab.appspot.com",
+            messagingSenderId: "1097708630883",
+            appId: "1:1097708630883:web:2dbf62e5ffcaafd1611956",
+            measurementId: "G-CD4VVCR59Q"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // In-memory logs to store previous status data locally
+        const localLogs = {};
+
+        function fetchRFIDStatuses() {
+            const tagsRef = ref(database, '/');
+            onValue(tagsRef, (snapshot) => {
+                const data = snapshot.val();
+                const displayDiv = document.getElementById('display');
+                displayDiv.innerHTML = ''; // Clear previous contents
+
+                for (const tag in data) {
+                    if (data[tag].status && data[tag].date && data[tag].time) {
+                        const recordDiv = document.createElement('div');
+                        recordDiv.classList.add('record');
+
+                        // ID
+                        const idParagraph = document.createElement('p');
+                        idParagraph.classList.add('record-id');
+                        idParagraph.textContent = `Medication Container ID: ${tag}`;
+                        recordDiv.appendChild(idParagraph);
+
+                        // Latest Status Details
+                        const statusParagraph = document.createElement('p');
+                        statusParagraph.classList.add('record-details');
+                        statusParagraph.textContent = `Medication Status: ${data[tag].status}`;
+                        recordDiv.appendChild(statusParagraph);
+
+                        const dateParagraph = document.createElement('p');
+                        dateParagraph.classList.add('record-details');
+                        dateParagraph.textContent = `Date: ${data[tag].date}`;
+                        recordDiv.appendChild(dateParagraph);
+
+                        const timeParagraph = document.createElement('p');
+                        timeParagraph.classList.add('record-details');
+                        timeParagraph.textContent = `Medication Time: ${data[tag].time}`;
+                        recordDiv.appendChild(timeParagraph);
+
+                        // Save each update locally for historical logs if it’s different
+                        if (!localLogs[tag] || JSON.stringify(localLogs[tag][localLogs[tag].length - 1]) !== JSON.stringify(data[tag])) {
+                            if (!localLogs[tag]) {
+                                localLogs[tag] = [];
+                            }
+                            localLogs[tag].push({ ...data[tag] });
+                        }
+
+                        // History Button
+                        const historyButton = document.createElement('button');
+                        historyButton.classList.add('history-button');
+                        historyButton.textContent = "View History";
+                        historyButton.onclick = () => showHistory(tag);
+                        recordDiv.appendChild(historyButton);
+
+                        displayDiv.appendChild(recordDiv);
+                    }
+                }
+            });
+        }
+
+        function showHistory(tag) {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = ''; // Clear previous history
+
+            if (localLogs[tag]) {
+                localLogs[tag].forEach(log => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `Status: ${log.status}, Date: ${log.date}, Time: ${log.time}`;
+                    historyList.appendChild(listItem);
+                });
+            }
+
+            document.getElementById('history-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('history-modal').style.display = 'none';
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('history-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        // Fetch attendance data on page load
+        window.onload = fetchRFIDStatuses;
+    </script>
+</head>
+<body>
+    <!-- Back Button -->
+    <button class="back-button" onclick="window.location.href='index.html'">Back to Login</button>
+
+    <div class="glass-container" id="display">
+        <h1>Attendance Data</h1>
+    </div>
+
+    <!-- Modal for showing history -->
+    <div class="modal" id="history-modal">
+        <div class="modal-content">
+            <h2>History</h2>
+            <ul id="history-list"></ul>
+            <span class="close-modal" onclick="closeModal()">Close</span>
+        </div>
+    </div>
+</body>
+</html>
